@@ -1,6 +1,4 @@
 """
-stim_to_syndrilla.py
-
 Extracts Hx, Hz, Lx, Lz parity check matrices from a stim surface code
 circuit and saves them as .alist files for use with syndrilla.
 
@@ -10,9 +8,6 @@ Works by:
 3. Identifying X-type ancillas (x odd) vs Z-type ancillas (x even)
 4. Building CSS matrices from circuit connectivity (orthogonal neighbors)
 5. Computing logical operators from the code geometry
-
-Usage:
-    python stim_to_syndrilla.py
 """
 
 import stim
@@ -65,10 +60,6 @@ def extract_matrices(circuit: stim.Circuit, out_prefix: str):
     """
     Extract Hx, Hz, Lx, Lz from an unrotated stim surface code circuit
     and save as .alist files.
-
-    The circuit must use integer qubit coordinates (as stim's unrotated
-    surface code does). Data qubits sit at positions where x+y is even,
-    ancilla qubits where x+y is odd.
 
     Matrix layout (matching syndrilla's examples):
       Hx:  (num_data_qubits rows) x (num_x_stabilizers cols)  -- transposed
