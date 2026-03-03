@@ -14,8 +14,6 @@ import stim
 import numpy as np
 
 
-# ── alist writer ──────────────────────────────────────────────────────────────
-
 def matrix_to_alist(mat: np.ndarray, path: str):
     """
     Save a binary matrix as a .alist file matching syndrilla's expected format.
@@ -54,8 +52,6 @@ def matrix_to_alist(mat: np.ndarray, path: str):
     print(f"Saved {path}  ({num_rows} rows x {num_cols} cols)")
 
 
-# ── matrix extraction ─────────────────────────────────────────────────────────
-
 def extract_matrices(circuit: stim.Circuit, out_prefix: str):
     """
     Extract Hx, Hz, Lx, Lz from an unrotated stim surface code circuit
@@ -77,8 +73,6 @@ def extract_matrices(circuit: stim.Circuit, out_prefix: str):
         tuple(map(int, c)) for c in coords.values() if (int(c[0]) + int(c[1])) % 2 == 1
     ]
 
-    # X-type ancillas: x coordinate is odd
-    # Z-type ancillas: x coordinate is even
     x_ancillas = sorted([(x, y) for x, y in ancilla_coords if x % 2 == 1])
     z_ancillas = sorted([(x, y) for x, y in ancilla_coords if x % 2 == 0])
 
@@ -132,9 +126,6 @@ def extract_matrices(circuit: stim.Circuit, out_prefix: str):
     matrix_to_alist(Lz.T, f"{out_prefix}_lz.alist")
 
     return Hx, Hz, Lx, Lz
-
-
-# ── main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     for distance in [3, 5, 7]:
