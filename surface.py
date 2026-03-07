@@ -1,4 +1,6 @@
 """
+stim_to_syndrilla.py
+
 Extracts Hx, Hz, Lx, Lz parity check matrices from a stim surface code
 circuit and saves them as .alist files for use with syndrilla.
 
@@ -8,11 +10,16 @@ Works by:
 3. Identifying X-type ancillas (x odd) vs Z-type ancillas (x even)
 4. Building CSS matrices from circuit connectivity (orthogonal neighbors)
 5. Computing logical operators from the code geometry
+
+Usage:
+    python stim_to_syndrilla.py
 """
 
 import stim
 import numpy as np
 
+
+# ── alist writer ──────────────────────────────────────────────────────────────
 
 def matrix_to_alist(mat: np.ndarray, path: str):
     """
@@ -52,10 +59,16 @@ def matrix_to_alist(mat: np.ndarray, path: str):
     print(f"Saved {path}  ({num_rows} rows x {num_cols} cols)")
 
 
+# ── matrix extraction ─────────────────────────────────────────────────────────
+
 def extract_matrices(circuit: stim.Circuit, out_prefix: str):
     """
     Extract Hx, Hz, Lx, Lz from an unrotated stim surface code circuit
     and save as .alist files.
+
+    The circuit must use integer qubit coordinates (as stim's unrotated
+    surface code does). Data qubits sit at positions where x+y is even,
+    ancilla qubits where x+y is odd.
 
     Matrix layout (matching syndrilla's examples):
       Hx:  (num_data_qubits rows) x (num_x_stabilizers cols)  -- transposed
@@ -73,6 +86,8 @@ def extract_matrices(circuit: stim.Circuit, out_prefix: str):
         tuple(map(int, c)) for c in coords.values() if (int(c[0]) + int(c[1])) % 2 == 1
     ]
 
+    # X-type ancillas: x coordinate is odd
+    # Z-type ancillas: x coordinate is even
     x_ancillas = sorted([(x, y) for x, y in ancilla_coords if x % 2 == 1])
     z_ancillas = sorted([(x, y) for x, y in ancilla_coords if x % 2 == 0])
 
@@ -102,16 +117,16 @@ def extract_matrices(circuit: stim.Circuit, out_prefix: str):
         for n in orthogonal_neighbors(x, y):
             Hz[i, n] = 1
 
-    # Logical X: horizontal chain across the top row of data qubits
-    # (qubits with y=0, sorted by x)
-    lx_qubits = sorted([data_idx[(x, y)] for (x, y) in data_coords if y == 0])
+    # Logical X: vertical chain down the left column of data qubits
+    # (qubits with x=0, sorted by y) -> matches reference [1,2,3,4,5] for d=5
+    lx_qubits = sorted([data_idx[(x, y)] for (x, y) in data_coords if x == 0])
     Lx = np.zeros((1, n_data), dtype=np.uint8)
     for q in lx_qubits:
         Lx[0, q] = 1
 
-    # Logical Z: vertical chain down the left column of data qubits
-    # (qubits with x=0, sorted by y)
-    lz_qubits = sorted([data_idx[(x, y)] for (x, y) in data_coords if x == 0])
+    # Logical Z: horizontal chain across the top row of data qubits
+    # (qubits with y=0, sorted by x) -> matches reference [1,6,11,16,21] for d=5
+    lz_qubits = sorted([data_idx[(x, y)] for (x, y) in data_coords if y == 0])
     Lz = np.zeros((1, n_data), dtype=np.uint8)
     for q in lz_qubits:
         Lz[0, q] = 1
@@ -126,6 +141,9 @@ def extract_matrices(circuit: stim.Circuit, out_prefix: str):
     matrix_to_alist(Lz.T, f"{out_prefix}_lz.alist")
 
     return Hx, Hz, Lx, Lz
+
+
+# ── main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     for distance in [3, 5, 7]:
